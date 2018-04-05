@@ -25,15 +25,22 @@
         width: 20%;
     }
 
-    .createTopBar {
+    .createTopBar,.modifyTopBar {
         padding: 5px;
+    }
+
+    .createPanels,.modifyPanels {
+        display: flex;
+        flex-direction: row;
+        justify-content: center;
+        align-items: center;
+        height: 100%;
     }
 
     .tablink:hover {
         background-color: #777;
     }
 
-    /* Style the tab content (and add height:100% for full page content) */
     .tabcontent {
         display: none;
         padding: 50px 20px 10px 20px;
@@ -44,11 +51,22 @@
     #Modify {background: linear-gradient(90deg, #ffffff, rgb(255, 125, 255));}
 
     textarea {
-
         font-family: Courier, monospace;
-        height: 90%;
-        width: 40%;
+        width: 46%;
+    }
 
+    textarea.create {
+        height: 90%;
+    }
+
+    textarea.modify {
+        height: 90%;
+    }
+
+    .processButton {
+        height: 50px;
+        width: 50px;
+        margin: 5px;
     }
 
 </style>
@@ -61,19 +79,45 @@
     <div id="Create" class="tabcontent">
         <div class="createTopBar">
             <button onclick="return addSampleTemplate()">Sample template</button>
-        </div>    
-        <textarea id="taTemplate">
-        </textarea>
-        <button onclick="return processTemplate()">>></button>
-        <textarea id="taOutput">
-        </textarea>
+        </div>
+        <div class="createPanels">
+            <textarea id="taTemplate" class="create" placeholder="Paste a json template here or hit the Sample template button"></textarea>
+            <button class="processButton" onclick="return processTemplate()">>></button>
+            <textarea id="taOutput" class="create" placeholder="Press the >> button to see the results here"></textarea>
+        </div>
     </div>
           
     <div id="Modify" class="tabcontent">
-        <p>Coming soon</p> 
+        <div class="modifyTopBar">
+                <h2>Modify JSON file</h2>
+
+                <form id="formModifyJSON" >
+                    <h3>Increment a field</h3>
+                    <div>
+                        <label>
+                            Field to increment:
+                            <input placeholder="example: poNumber" name="fieldToIncrement" />
+                        </label>
+                        <label>
+                            Starting value:
+                            <input name="startingValue" value="0" />
+                        </label>
+                        <label>
+                            <input type="checkbox" name="newField" />
+                            New field
+                        </label>
+                    </div>
+                </form>
+            <button onclick="return addSampleJSON()">Sample JSON</button>
+        </div>
+        <div class="modifyPanels">
+            <textarea id="taJSONIn" class="modify" placeholder="Paste a JSON array here or hit the Sample JSON button"></textarea>
+            <button class="processButton" onclick="return processJSON()">>></button>
+            <textarea id="taJSONOut" class="modify" placeholder="Press the >> button to see the results here"></textarea>
+        </div>
     </div>
 
-    <script type="text/javascript" src="sampleTemplate.js"></script>
+    <script type="text/javascript" src="samples.js"></script>
 
     <script>
 
@@ -103,6 +147,13 @@
 
             var taTemplate = document.getElementById("taTemplate");
             taTemplate.value = JSON.stringify(sampleTemplate, null, 4);
+
+        }
+
+        function addSampleJSON() {
+
+            var taJSON = document.getElementById("taJSONIn");
+            taJSON.value = JSON.stringify(sampleJSON, null, 4);
 
         }
 
@@ -164,60 +215,41 @@
          * Event handler. Modify json file by incrementing a field, starting at given value and going
          * up by 1 for each item.
         */
-        // function loadAndIncrement() {
+        function processJSON() {
 
-        //     var form = document.getElementById("formModifyJSON");
-        //     var fileToModify = form.elements["fileToModify"].value;
-        //     var fieldToIncrement = form.elements["fieldToIncrement"].value;
-        //     var startingValue = form.elements["startingValue"].value;
-        //     var isNewField = form.elements["newField"].checked;
+            var form = document.getElementById("formModifyJSON");
+            var fieldToIncrement = form.elements["fieldToIncrement"].value;
+            var startingValue = form.elements["startingValue"].value;
+            var isNewField = form.elements["newField"].checked;
 
-        //     // Form error check
-        //     if (!fileToModify || !fieldToIncrement || startingValue === "") {
+            var taJSONIn = document.getElementById("taJSONIn");
+            var taJSONOut = document.getElementById("taJSONOut");
 
-        //         alert("Make sure File to modify, Field to increment and Starting value have values.");
-        //         return false;
+            var jsonIn = JSON.parse(taJSONIn.value);
 
-        //     } else {
-
-        //         fetch(fileToModify, {
-        //             method: 'get'
-        //         }).then(function(response) {
-        //             if (response.status !== 200) {
-        //                 alert("Error loading file!");
-        //             } else {
-        //                 return response.json();
-        //             }
-        //         }).then(function(jsonResponse) {
-
-        //             var newJSON = incrementField(jsonResponse, fieldToIncrement, startingValue, isNewField);
-        //             showAndPostJSON(newJSON, fileToModify);
-
-        //         });
-
-        //         return false;
-
-        //     }
-                
-        // }
+            var newJSON = incrementField(jsonIn, fieldToIncrement, startingValue, isNewField);
+        
+            taJSONOut.value = JSON.stringify(newJSON, null, 4);
+            return false;
+        }
 
         /** 
          * Perform field increment operation
          */ 
-        // function incrementField(jsonArray, field, value, isNewField) {
+        function incrementField(jsonArray, field, value, isNewField) {
 
-        //     jsonArray.forEach(function(item){
+            jsonArray.forEach(function(item){
 
-        //         if (item[field] || isNewField) {
-        //             item[field] = typeof field === "string"? value.toString() : value;
-        //             value++;
-        //         }
+                if (item[field] || isNewField) {
+                    item[field] = typeof field === "string"? value.toString() : value;
+                    value++;
+                }
 
-        //     });
+            });
 
-        //     return(jsonArray);
+            return(jsonArray);
 
-        // }
+        }
 
         /**
          * Display JSON and post for backend to save file
