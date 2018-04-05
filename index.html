@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<style>
+
+    * {
+        box-sizing: border-box;
+    }
+
+    html, body {
+        height: 100%;
+        margin: 0;
+        font-family:Arial, Helvetica, sans-serif;
+    }
+
+    .tablink {
+        background-color: #aaa;
+        float: left;
+        border: none;
+        outline: none;
+        cursor: pointer;
+        padding: 14px 16px;
+        font-size: 17px;
+        width: 20%;
+    }
+
+    .createTopBar {
+        padding: 5px;
+    }
+
+    .tablink:hover {
+        background-color: #777;
+    }
+
+    /* Style the tab content (and add height:100% for full page content) */
+    .tabcontent {
+        display: none;
+        padding: 50px 20px 10px 20px;
+        height: 100%;
+    }
+
+    #Create {background: linear-gradient(90deg, #ffffff, rgb(255, 255, 125));}
+    #Modify {background: linear-gradient(90deg, #ffffff, rgb(255, 125, 255));}
+
+    textarea {
+
+        font-family: Courier, monospace;
+        height: 90%;
+        width: 40%;
+
+    }
+
+</style>
+
+<body>
+
+    <button class="tablink" onclick="openPage('Create', this, 'yellow')" id="defaultOpen">Create</button>
+    <button class="tablink" onclick="openPage('Modify', this, '#fbb2ff')">Modify</button>
+    
+    <div id="Create" class="tabcontent">
+        <div class="createTopBar">
+            <button onclick="return addSampleTemplate()">Sample template</button>
+        </div>    
+        <textarea id="taTemplate">
+        </textarea>
+        <button onclick="return processTemplate()">>></button>
+        <textarea id="taOutput">
+        </textarea>
+    </div>
+          
+    <div id="Modify" class="tabcontent">
+        <p>Coming soon</p> 
+    </div>
+
+    <script type="text/javascript" src="sampleTemplate.js"></script>
+
+    <script>
+
+    function openPage(pageName,elmnt,color) {
+
+        var i, tabcontent, tablinks;
+
+        tabcontent = document.getElementsByClassName("tabcontent");
+        for (i = 0; i < tabcontent.length; i++) {
+            tabcontent[i].style.display = "none";
+        }
+
+        tablinks = document.getElementsByClassName("tablink");
+        for (i = 0; i < tablinks.length; i++) {
+            tablinks[i].style.backgroundColor = "";
+        }
+
+        document.getElementById(pageName).style.display = "block";
+        elmnt.style.backgroundColor = color;
+
+    }
+    // Get the element with id="defaultOpen" and click on it
+    document.getElementById("defaultOpen").click();
+
+
+        function addSampleTemplate() {
+
+            var taTemplate = document.getElementById("taTemplate");
+            taTemplate.value = JSON.stringify(sampleTemplate, null, 4);
+
+        }
+
+        function processTemplate() {
+            var taTemplate = document.getElementById("taTemplate");
+            var taOutput = document.getElementById("taOutput");
+
+            var template = JSON.parse(taTemplate.value);
+
+            var newJSON = generateJSON(template);
+
+            taOutput.value = JSON.stringify(newJSON, null, 4);
+            return false;
+        }
+
+    /** 
+    * Generate JSON file from passed-in template
+    */
+    function generateJSON(templateJSON) {
+
+    var recordCount = templateJSON.recordCount;
+
+    var arr = [];
+    for (var i = 0; i < recordCount; i++) {
+
+        var obj = {};
+        templateJSON.template.forEach(function(item) {
+            switch (item.type) {
+                case "same":
+                    obj[item.keyName] = item.value;
+                break;
+                case "index":
+
+                    obj[item.keyName] = item.toString? item.startAt.toString() : item.startAt;
+                    item.startAt ++;
+
+                break;
+                case "sequence":
+
+                    obj[item.keyName] = item.value[item.startAt];
+                    item.startAt ++;
+                    if (item.startAt >= item.value.length) {
+                        item.startAt = 0;
+                    }
+
+            }
+
+        });
+
+        arr.push(obj);
+    }
+
+    return arr;
+
+    }
+
+
+        /**
+         * Event handler. Modify json file by incrementing a field, starting at given value and going
+         * up by 1 for each item.
+        */
+        // function loadAndIncrement() {
+
+        //     var form = document.getElementById("formModifyJSON");
+        //     var fileToModify = form.elements["fileToModify"].value;
+        //     var fieldToIncrement = form.elements["fieldToIncrement"].value;
+        //     var startingValue = form.elements["startingValue"].value;
+        //     var isNewField = form.elements["newField"].checked;
+
+        //     // Form error check
+        //     if (!fileToModify || !fieldToIncrement || startingValue === "") {
+
+        //         alert("Make sure File to modify, Field to increment and Starting value have values.");
+        //         return false;
+
+        //     } else {
+
+        //         fetch(fileToModify, {
+        //             method: 'get'
+        //         }).then(function(response) {
+        //             if (response.status !== 200) {
+        //                 alert("Error loading file!");
+        //             } else {
+        //                 return response.json();
+        //             }
+        //         }).then(function(jsonResponse) {
+
+        //             var newJSON = incrementField(jsonResponse, fieldToIncrement, startingValue, isNewField);
+        //             showAndPostJSON(newJSON, fileToModify);
+
+        //         });
+
+        //         return false;
+
+        //     }
+                
+        // }
+
+        /** 
+         * Perform field increment operation
+         */ 
+        // function incrementField(jsonArray, field, value, isNewField) {
+
+        //     jsonArray.forEach(function(item){
+
+        //         if (item[field] || isNewField) {
+        //             item[field] = typeof field === "string"? value.toString() : value;
+        //             value++;
+        //         }
+
+        //     });
+
+        //     return(jsonArray);
+
+        // }
+
+        /**
+         * Display JSON and post for backend to save file
+         */
+        // function showAndPostJSON(newJSON, fileName) {
+            
+        //     document.getElementById("jsonOutput").innerText = JSON.stringify(newJSON, null, 2);
+
+        //     var xhttp = new XMLHttpRequest();
+        //     xhttp.onreadystatechange = function() {
+        //         if (this.readyState == 4 && this.status == 200) {
+        //         console.log("Successfully sent post");
+        //         }
+        //     };
+        //     xhttp.open("POST", "http://localhost:7000", true);
+        //     xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+        //     xhttp.send(JSON.stringify(
+        //         {
+        //             postType: "saveJSON",
+        //             saveToFile: fileName,
+        //             content: newJSON
+        //         })
+        //     );
+        // }
+
+        /**
+         * Event handler. Create JSON from template.
+        */
+
+    </script>
+
+</body>
+
+</html>
