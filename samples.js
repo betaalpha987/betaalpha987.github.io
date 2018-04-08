@@ -5,8 +5,7 @@ var sampleTemplate =
         {
             "keyName": "poNum",
             "type": "index",
-            "startAt": 450,
-            "toString": true
+            "makeString": true
         },
         {
             "keyName": "companyName",
@@ -19,16 +18,18 @@ var sampleTemplate =
             "value": 45
         },
         {
-            "keyName": "userName",
-            "type": "sequence",
-            "value": ["KNolan","GKelly","VSky"],
+            "keyName": "weatherType",
+            "type": "sample custom",
+            "value": ["stormy","cloudy","sunny"],
             "startAt": 0
         },
         {
             "keyName": "userFullName",
-            "type": "sequence",
-            "value": ["Kevin Nolan","Grace Kelly","Vanilla Sky"],
-            "startAt": 0
+            "type": "sample firstLastNames"
+        },
+        {
+            "keyName": "country",
+            "type": "sample country"
         }
     ]
 };

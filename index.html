@@ -3,15 +3,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
-
     * {
         box-sizing: border-box;
     }
 
-    html, body {
+    html,
+    body {
         height: 100%;
         margin: 0;
-        font-family:Arial, Helvetica, sans-serif;
+        font-family: Arial, Helvetica, sans-serif;
     }
 
     .tablink {
@@ -25,11 +25,13 @@
         width: 20%;
     }
 
-    .createTopBar,.modifyTopBar {
+    .createTopBar,
+    .modifyTopBar {
         padding: 5px;
     }
 
-    .createPanels,.modifyPanels {
+    .createPanels,
+    .modifyPanels {
         display: flex;
         flex-direction: row;
         justify-content: center;
@@ -47,8 +49,13 @@
         height: 100%;
     }
 
-    #Create {background: linear-gradient(90deg, #ffffff, rgb(255, 255, 125));}
-    #Modify {background: linear-gradient(90deg, #ffffff, rgb(255, 125, 255));}
+    #Create {
+        background: linear-gradient(90deg, #ffffff, rgb(255, 255, 125));
+    }
+
+    #Modify {
+        background: linear-gradient(90deg, #ffffff, rgb(255, 125, 255));
+    }
 
     textarea {
         font-family: Courier, monospace;
@@ -68,14 +75,13 @@
         width: 50px;
         margin: 5px;
     }
-
 </style>
 
 <body>
 
     <button class="tablink" onclick="openPage('Create', this, 'yellow')" id="defaultOpen">Create</button>
     <button class="tablink" onclick="openPage('Modify', this, '#fbb2ff')">Modify</button>
-    
+
     <div id="Create" class="tabcontent">
         <div class="createTopBar">
             <button onclick="return addSampleTemplate()">Sample template</button>
@@ -86,28 +92,27 @@
             <textarea id="taOutput" class="create" placeholder="Press the >> button to see the results here"></textarea>
         </div>
     </div>
-          
+
     <div id="Modify" class="tabcontent">
         <div class="modifyTopBar">
-                <h2>Modify JSON file</h2>
+            <h2>Modify JSON file</h2>
 
-                <form id="formModifyJSON" >
-                    <h3>Increment a field</h3>
-                    <div>
-                        <label>
-                            Field to increment:
-                            <input placeholder="example: poNumber" name="fieldToIncrement" />
-                        </label>
-                        <label>
-                            Starting value:
-                            <input name="startingValue" value="0" />
-                        </label>
-                        <label>
-                            <input type="checkbox" name="newField" />
-                            New field
-                        </label>
-                    </div>
-                </form>
+            <form id="formModifyJSON">
+                <h3>Increment a field</h3>
+                <div>
+                    <label>
+                        Field to increment:
+                        <input placeholder="example: poNumber" name="fieldToIncrement" />
+                    </label>
+                    <label>
+                        Starting value:
+                        <input name="startingValue" value="0" />
+                    </label>
+                    <label>
+                        <input type="checkbox" name="newField" /> New field
+                    </label>
+                </div>
+            </form>
             <button onclick="return addSampleJSON()">Sample JSON</button>
         </div>
         <div class="modifyPanels">
@@ -118,31 +123,38 @@
     </div>
 
     <script type="text/javascript" src="samples.js"></script>
+    <script type="text/javascript" src="premade.js"></script>
 
     <script>
 
-    function openPage(pageName,elmnt,color) {
+        // Get the element with id="defaultOpen" and click on it
+        document.getElementById("defaultOpen").click();
 
-        var i, tabcontent, tablinks;
+        /**
+         * Reveal the page for the tab the user selected
+         */
+        function openPage(pageName, elmnt, color) {
 
-        tabcontent = document.getElementsByClassName("tabcontent");
-        for (i = 0; i < tabcontent.length; i++) {
-            tabcontent[i].style.display = "none";
+            var i, tabcontent, tablinks;
+
+            tabcontent = document.getElementsByClassName("tabcontent");
+            for (i = 0; i < tabcontent.length; i++) {
+                tabcontent[i].style.display = "none";
+            }
+
+            tablinks = document.getElementsByClassName("tablink");
+            for (i = 0; i < tablinks.length; i++) {
+                tablinks[i].style.backgroundColor = "";
+            }
+
+            document.getElementById(pageName).style.display = "block";
+            elmnt.style.backgroundColor = color;
+
         }
 
-        tablinks = document.getElementsByClassName("tablink");
-        for (i = 0; i < tablinks.length; i++) {
-            tablinks[i].style.backgroundColor = "";
-        }
-
-        document.getElementById(pageName).style.display = "block";
-        elmnt.style.backgroundColor = color;
-
-    }
-    // Get the element with id="defaultOpen" and click on it
-    document.getElementById("defaultOpen").click();
-
-
+        /**
+         * Event handler adds sample template to textarea when button pressed
+         */
         function addSampleTemplate() {
 
             var taTemplate = document.getElementById("taTemplate");
@@ -150,6 +162,9 @@
 
         }
 
+        /**
+         * Event handler adds sample JSON to textarea when button pressed
+         */
         function addSampleJSON() {
 
             var taJSON = document.getElementById("taJSONIn");
@@ -157,6 +172,9 @@
 
         }
 
+        /**
+         * Process the template and output JSON
+         */
         function processTemplate() {
             var taTemplate = document.getElementById("taTemplate");
             var taOutput = document.getElementById("taOutput");
@@ -169,50 +187,123 @@
             return false;
         }
 
-    /** 
-    * Generate JSON file from passed-in template
-    */
-    function generateJSON(templateJSON) {
+        /** 
+        * Generate JSON file from passed-in template
+        */
+        function generateJSON(templateJSON) {
 
-    var recordCount = templateJSON.recordCount;
+            var recordCount = templateJSON.recordCount;
 
-    var arr = [];
-    for (var i = 0; i < recordCount; i++) {
+            // Create array and fill with empty objects
+            var arr = [];
+            for (var i = 0; i < recordCount; i++) {
+                arr.push({});
+            };
 
-        var obj = {};
-        templateJSON.template.forEach(function(item) {
-            switch (item.type) {
-                case "same":
-                    obj[item.keyName] = item.value;
-                break;
-                case "index":
+            // For each item in the user's template, add a key/value pair to every object in the array
+            templateJSON.template.forEach(function (item) {
+                if (!item.keyName) {
+                    console.warn("A template item doesn't have a keyName. Please ensure all template items have one.");
+                } else if (!item.type) {
+                    console.warn("keyName " + item.keyName + " doesn't have a type. Please ensure all template items have one.");
+                } else {
 
-                    obj[item.keyName] = item.toString? item.startAt.toString() : item.startAt;
-                    item.startAt ++;
+                    switch (item.type) {
+                    
+                    case "same":
 
-                break;
-                case "sequence":
+                        arr = processSame(arr, item);
+                        break;
 
-                    obj[item.keyName] = item.value[item.startAt];
-                    item.startAt ++;
-                    if (item.startAt >= item.value.length) {
-                        item.startAt = 0;
+                    case "index":
+
+                        arr = processIndex(arr, item);
+
+                        break;
+                    case RegExp("^sample", 'i'):
+
+
+                        // if (!item.startAt) {
+                        //     item.startAt = 0;
+                        // }
+                        // obj[item.keyName] = item.value[item.startAt];
+                        // item.startAt++;
+                        // if (item.startAt >= item.value.length) {
+                        //     item.startAt = 0;
+                        // }
+
                     }
+
+                }
+
+
+            });
+
+            return arr;
+
+        }
+
+        function processSame(arr, item) {
+            if (!item.value) console.warn("Keyname " + item.keyName + ": same-type items need a value.");
+            
+            arr.forEach(function(record) {
+                record[item.keyName] = item.value;
+            });
+
+            return arr;
+        }
+
+        function processIndex(arr, item) {
+
+            if (!item.startAt) {
+                item.startAt = 0
+            } else if (typeof(item.startAt) == "string") {
+
+                // Set makeString to true so it can be converted back after doing indexing.
+                // Also count number of leading zeroes so they can be added back. 
+                item.makeString = true;
+                item.leadingZeroes = getLeadingZeroes(item.startAt);
+                item.startAt = parseFloat(item.startAt);
 
             }
 
-        });
+            arr.forEach(function(record) {
 
-        arr.push(obj);
-    }
+                var amount = item.startAt;
 
-    return arr;
+                if (item.makeString) {
 
-    }
+                    amount = amount.toString();
+
+                    if (item.leadingZeroes) {
+                        amount = amount.padStart(item.leadingZeroes, "0");
+                    }
+
+                }
+
+                record[item.keyName] = amount;
+                item.startAt++;
+
+            });
+
+            function getLeadingZeroes(str) {
+
+                var i;
+                for (i = 0; i < str.length; i ++) {
+                    if (str[i] !== '0') {
+                        break;
+                    }
+                }
+                return i;
+
+            }
+
+            return arr;
+        }
 
 
         /**
-         * Event handler. Modify json file by incrementing a field, starting at given value and going
+         * Event handler modifies json file by incrementing a field, starting at given value and going
          * up by 1 for each item.
         */
         function processJSON() {
@@ -228,56 +319,28 @@
             var jsonIn = JSON.parse(taJSONIn.value);
 
             var newJSON = incrementField(jsonIn, fieldToIncrement, startingValue, isNewField);
-        
+
             taJSONOut.value = JSON.stringify(newJSON, null, 4);
             return false;
         }
 
         /** 
          * Perform field increment operation
-         */ 
+         */
         function incrementField(jsonArray, field, value, isNewField) {
 
-            jsonArray.forEach(function(item){
+            jsonArray.forEach(function (item) {
 
                 if (item[field] || isNewField) {
-                    item[field] = typeof field === "string"? value.toString() : value;
+                    item[field] = typeof field === "string" ? value.toString() : value;
                     value++;
                 }
 
             });
 
-            return(jsonArray);
+            return (jsonArray);
 
         }
-
-        /**
-         * Display JSON and post for backend to save file
-         */
-        // function showAndPostJSON(newJSON, fileName) {
-            
-        //     document.getElementById("jsonOutput").innerText = JSON.stringify(newJSON, null, 2);
-
-        //     var xhttp = new XMLHttpRequest();
-        //     xhttp.onreadystatechange = function() {
-        //         if (this.readyState == 4 && this.status == 200) {
-        //         console.log("Successfully sent post");
-        //         }
-        //     };
-        //     xhttp.open("POST", "http://localhost:7000", true);
-        //     xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-        //     xhttp.send(JSON.stringify(
-        //         {
-        //             postType: "saveJSON",
-        //             saveToFile: fileName,
-        //             content: newJSON
-        //         })
-        //     );
-        // }
-
-        /**
-         * Event handler. Create JSON from template.
-        */
 
     </script>
 
