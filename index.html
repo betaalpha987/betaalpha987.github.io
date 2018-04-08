@@ -267,6 +267,11 @@
 
             }
 
+            if (item.leadingZeroes) {
+                // Total length allows for adding leading zeroes while taking into account 099 -> 100 situations
+                item.totalLength = item.startAt.toString().length + item.leadingZeroes
+            }
+
             arr.forEach(function(record) {
 
                 var amount = item.startAt;
@@ -276,7 +281,7 @@
                     amount = amount.toString();
 
                     if (item.leadingZeroes) {
-                        amount = amount.padStart(item.leadingZeroes, "0");
+                        amount = amount.padStart(item.totalLength, "0");
                     }
 
                 }

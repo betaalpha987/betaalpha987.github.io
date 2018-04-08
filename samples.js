@@ -5,7 +5,7 @@ var sampleTemplate =
         {
             "keyName": "poNum",
             "type": "index",
-            "makeString": true
+            "startAt": "00099"
         },
         {
             "keyName": "companyName",
