@@ -1,4 +1,4 @@
-var sampleTemplate =
+var exampleTemplate =
 {
     "recordCount": 10,
     "template": [
@@ -20,7 +20,7 @@ var sampleTemplate =
         {
             "keyName": "weatherType",
             "type": "sample custom",
-            "value": ["stormy","cloudy","sunny"],
+            "custom": ["stormy","cloudy","sunny"],
             "startAt": 0
         },
         {
@@ -29,12 +29,12 @@ var sampleTemplate =
         },
         {
             "keyName": "country",
-            "type": "sample country"
+            "type": "sample countries"
         }
     ]
 };
 
-var sampleJSON = 
+var exampleJSON = 
 
 [
     {

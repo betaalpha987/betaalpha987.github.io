@@ -84,10 +84,10 @@
 
     <div id="Create" class="tabcontent">
         <div class="createTopBar">
-            <button onclick="return addSampleTemplate()">Sample template</button>
+            <button onclick="return addExampleTemplate()">Example template</button>
         </div>
         <div class="createPanels">
-            <textarea id="taTemplate" class="create" placeholder="Paste a json template here or hit the Sample template button"></textarea>
+            <textarea id="taTemplate" class="create" placeholder="Paste a json template here or hit the Example template button"></textarea>
             <button class="processButton" onclick="return processTemplate()">>></button>
             <textarea id="taOutput" class="create" placeholder="Press the >> button to see the results here"></textarea>
         </div>
@@ -113,16 +113,16 @@
                     </label>
                 </div>
             </form>
-            <button onclick="return addSampleJSON()">Sample JSON</button>
+            <button onclick="return addExampleJSON()">Example JSON</button>
         </div>
         <div class="modifyPanels">
-            <textarea id="taJSONIn" class="modify" placeholder="Paste a JSON array here or hit the Sample JSON button"></textarea>
+            <textarea id="taJSONIn" class="modify" placeholder="Paste a JSON array here or hit the Example JSON button"></textarea>
             <button class="processButton" onclick="return processJSON()">>></button>
             <textarea id="taJSONOut" class="modify" placeholder="Press the >> button to see the results here"></textarea>
         </div>
     </div>
 
-    <script type="text/javascript" src="samples.js"></script>
+    <script type="text/javascript" src="examples.js"></script>
     <script type="text/javascript" src="premade.js"></script>
 
     <script>
@@ -153,22 +153,22 @@
         }
 
         /**
-         * Event handler adds sample template to textarea when button pressed
+         * Event handler adds example template to textarea when button pressed
          */
-        function addSampleTemplate() {
+        function addExampleTemplate() {
 
             var taTemplate = document.getElementById("taTemplate");
-            taTemplate.value = JSON.stringify(sampleTemplate, null, 4);
+            taTemplate.value = JSON.stringify(exampleTemplate, null, 4);
 
         }
 
         /**
-         * Event handler adds sample JSON to textarea when button pressed
+         * Event handler adds example JSON to textarea when button pressed
          */
-        function addSampleJSON() {
+        function addExampleJSON() {
 
             var taJSON = document.getElementById("taJSONIn");
-            taJSON.value = JSON.stringify(sampleJSON, null, 4);
+            taJSON.value = JSON.stringify(exampleJSON, null, 4);
 
         }
 
@@ -208,34 +208,19 @@
                     console.warn("keyName " + item.keyName + " doesn't have a type. Please ensure all template items have one.");
                 } else {
 
-                    switch (item.type) {
+                    switch (true) {
                     
-                    case "same":
-
+                    case item.type === "same":
                         arr = processSame(arr, item);
                         break;
-
-                    case "index":
-
+                    case item.type === "index":
                         arr = processIndex(arr, item);
-
                         break;
-                    case RegExp("^sample", 'i'):
-
-
-                        // if (!item.startAt) {
-                        //     item.startAt = 0;
-                        // }
-                        // obj[item.keyName] = item.value[item.startAt];
-                        // item.startAt++;
-                        // if (item.startAt >= item.value.length) {
-                        //     item.startAt = 0;
-                        // }
-
+                    case item.type.startsWith("sample"):
+                        arr = processSample(arr, item);
                     }
 
                 }
-
 
             });
 
@@ -243,6 +228,9 @@
 
         }
 
+        /**
+         * Populate arr objects with key and value. Value is always the same.
+         */
         function processSame(arr, item) {
             if (!item.value) console.warn("Keyname " + item.keyName + ": same-type items need a value.");
             
@@ -253,7 +241,10 @@
             return arr;
         }
 
-        function processIndex(arr, item) {
+        /**
+         * Populate arr objects with key and value. Value is an ascending number.
+         */
+         function processIndex(arr, item) {
 
             if (!item.startAt) {
                 item.startAt = 0
@@ -306,6 +297,93 @@
             return arr;
         }
 
+        /**
+         * Populate arr objects with key and value. Value is chosen from an array. Array of values is
+         * a preset one or a custom array given by the user.
+         */
+        function processSample(arr, item) {
+
+            if (!item.startAt) {
+                item.startAt = 0;
+            }
+
+            var sampleArr = getSample(item);
+
+            if (sampleArr) {
+
+                arr.forEach(function(record) {
+
+                    record[item.keyName] = sampleArr[item.startAt];
+                    item.startAt++;
+                    if (item.startAt >= sampleArr.length) {
+                        item.startAt = 0;
+                    }
+
+                });
+
+            }
+
+            return arr;
+
+        }
+
+        /**
+         * Get sample array for the sample json type
+         */
+        function getSample(item) {
+            
+            var sampleArr = [];
+            // Determine sample array to run through
+            switch (item.type) {
+
+                case "sample custom":
+                    if (!item.custom || !Array.isArray(item.custom)) {
+
+                        console.warn("keyName " + item.keyName + ": type 'sample custom' needs a custom key with a value that's an array of samples.");
+                        return;
+
+                    } else {
+
+                        sampleArr = item.custom;
+                        return sampleArr;
+
+                    }
+                case "sample countries":
+
+                    pre_countries.forEach(function(item) {
+                        sampleArr.push(item.nameEnglish);
+                    });
+                    return sampleArr;
+
+                case "sample firstNames":
+
+                    sampleArr = pre_firstNames;
+                    return sampleArr;
+
+                case "sample lastNames":
+
+                    sampleArr = pre_lastNames;
+                    return sampleArr;
+
+                case "sample firstLastNames":
+
+                    pre_firstNames.forEach(function(firstName, ind){
+                        sampleArr.push(firstName + " " + pre_lastNames[ind]);
+                    });
+                    return sampleArr;
+
+                case "sample weightsPlural":
+
+                    sampleArr = pre_uomWeightsPlural;                   
+                    return sampleArr;
+
+                default:
+                    console.warn("keyName " + item.keyName + ": sample type " + item.type + " not known.");
+                    return;
+
+            }
+
+        }
 
         /**
          * Event handler modifies json file by incrementing a field, starting at given value and going
