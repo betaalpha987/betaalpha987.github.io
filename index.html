@@ -2,6 +2,8 @@
 <html>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
 <style>
     * {
         box-sizing: border-box;
@@ -49,6 +51,29 @@
         height: 100%;
     }
 
+    .helpContent {
+        position: fixed;
+        display: none;
+        padding: 50px;
+        height: 95%;
+        width: 50%;
+        right: 10px;
+        top: 2.5%;
+        background-color: #eee;
+        overflow: scroll;
+    }
+
+    .closeHelp {
+        position: fixed;
+        padding: 2px 4px;
+        background-color: #bbb;
+        left: 50%;
+        top: 20px;
+        transform: translateX(-50%);
+        width: 22px;
+        height: 22px;
+    }
+
     #Create {
         background: linear-gradient(90deg, #ffffff, rgb(255, 255, 125));
     }
@@ -62,12 +87,13 @@
         width: 46%;
     }
 
-    textarea.create {
+    textarea.create, textarea.modify {
         height: 90%;
     }
 
-    textarea.modify {
-        height: 90%;
+    span {
+        font-family: Courier, monospace;
+        background-color: #ddd;
     }
 
     .processButton {
@@ -85,12 +111,52 @@
     <div id="Create" class="tabcontent">
         <div class="createTopBar">
             <button onclick="return addExampleTemplate()">Example template</button>
+            <button onclick="openCreateHelp()">Show help</button>
         </div>
         <div class="createPanels">
             <textarea id="taTemplate" class="create" placeholder="Paste a json template here or hit the Example template button"></textarea>
             <button class="processButton" onclick="return processTemplate()">>></button>
             <textarea id="taOutput" class="create" placeholder="Press the >> button to see the results here"></textarea>
         </div>
+    </div>
+
+    <div id="CreateHelp" class="helpContent">
+        <div onclick="closeCreateHelp()" class="closeHelp"><i class="fa fa-close" style="font-size:18px"></i></div>
+        <h1>All templates need:</h1>
+        <ul>
+            <li><span>keyName</span></li>
+            <li><span>type</span></li>
+        </ul>
+        <h1>Types</h1>
+        <h2><span>same</span></h2>
+        <p>Every record in the json file has the exact same value.</p>
+        <h3>Fields</h3>
+        <ul>
+            <li><span>value</span>: Can be a string, integer, array, object and more!</li>
+        </ul>
+        <h2><span>index</span></h2>
+        <p>Value is a number (or string showing a number) that goes up by one for each record.</p>
+        <p></p>
+        <h3>Fields</h3>
+        <ul>
+            <li><span>startAt</span>: optional (default: 0). Starting number. Make a number or string with leading zeroes and all records will use the same format, eg. <span>22, 23, 24</span> or <span>"0099", "0100", "0101"</span> etc.</li>
+        </ul>
+        <h1>Sample Types</h1>
+        <p>These types have a different value for each record taken from a sample of names, countries etc. Types are:</p>
+        <ul>
+            <li><span>sample firstNames</span></li>
+            <li><span>sample lastNames</span></li>
+            <li><span>sample firstLastNames</span></li>
+            <li><span>sample countries</span></li>
+            <li><span>sample weightsPlural</span></li>
+            <li><span>sample custom</span></li>
+        </ul>
+        <p>All samples are preset, except sample custom, which allows you to specify your own array of samples. Values used loop round, eg. <span>Zimbabwe -> Afghanistan</span>.</p>
+        <h3>Fields</h3>
+        <ul>
+            <li><span>startAt</span>: optional (default 0) Index of where to start in the list of samples</li>
+            <li><span>custom</span>: Custom sample only. The array of values to go through.</li>
+        </ul>
     </div>
 
     <div id="Modify" class="tabcontent">
@@ -124,306 +190,14 @@
 
     <script type="text/javascript" src="examples.js"></script>
     <script type="text/javascript" src="premade.js"></script>
+    <script type="text/javascript" src="create.js"></script>
+    <script type="text/javascript" src="modify.js"></script>
+    <script type="text/javascript" src="navigate.js"></script>
 
     <script>
 
         // Get the element with id="defaultOpen" and click on it
         document.getElementById("defaultOpen").click();
-
-        /**
-         * Reveal the page for the tab the user selected
-         */
-        function openPage(pageName, elmnt, color) {
-
-            var i, tabcontent, tablinks;
-
-            tabcontent = document.getElementsByClassName("tabcontent");
-            for (i = 0; i < tabcontent.length; i++) {
-                tabcontent[i].style.display = "none";
-            }
-
-            tablinks = document.getElementsByClassName("tablink");
-            for (i = 0; i < tablinks.length; i++) {
-                tablinks[i].style.backgroundColor = "";
-            }
-
-            document.getElementById(pageName).style.display = "block";
-            elmnt.style.backgroundColor = color;
-
-        }
-
-        /**
-         * Event handler adds example template to textarea when button pressed
-         */
-        function addExampleTemplate() {
-
-            var taTemplate = document.getElementById("taTemplate");
-            taTemplate.value = JSON.stringify(exampleTemplate, null, 4);
-
-        }
-
-        /**
-         * Event handler adds example JSON to textarea when button pressed
-         */
-        function addExampleJSON() {
-
-            var taJSON = document.getElementById("taJSONIn");
-            taJSON.value = JSON.stringify(exampleJSON, null, 4);
-
-        }
-
-        /**
-         * Process the template and output JSON
-         */
-        function processTemplate() {
-            var taTemplate = document.getElementById("taTemplate");
-            var taOutput = document.getElementById("taOutput");
-
-            var template = JSON.parse(taTemplate.value);
-
-            var newJSON = generateJSON(template);
-
-            taOutput.value = JSON.stringify(newJSON, null, 4);
-            return false;
-        }
-
-        /** 
-        * Generate JSON file from passed-in template
-        */
-        function generateJSON(templateJSON) {
-
-            var recordCount = templateJSON.recordCount;
-
-            // Create array and fill with empty objects
-            var arr = [];
-            for (var i = 0; i < recordCount; i++) {
-                arr.push({});
-            };
-
-            // For each item in the user's template, add a key/value pair to every object in the array
-            templateJSON.template.forEach(function (item) {
-                if (!item.keyName) {
-                    console.warn("A template item doesn't have a keyName. Please ensure all template items have one.");
-                } else if (!item.type) {
-                    console.warn("keyName " + item.keyName + " doesn't have a type. Please ensure all template items have one.");
-                } else {
-
-                    switch (true) {
-                    
-                    case item.type === "same":
-                        arr = processSame(arr, item);
-                        break;
-                    case item.type === "index":
-                        arr = processIndex(arr, item);
-                        break;
-                    case item.type.startsWith("sample"):
-                        arr = processSample(arr, item);
-                    }
-
-                }
-
-            });
-
-            return arr;
-
-        }
-
-        /**
-         * Populate arr objects with key and value. Value is always the same.
-         */
-        function processSame(arr, item) {
-            if (!item.value) console.warn("Keyname " + item.keyName + ": same-type items need a value.");
-            
-            arr.forEach(function(record) {
-                record[item.keyName] = item.value;
-            });
-
-            return arr;
-        }
-
-        /**
-         * Populate arr objects with key and value. Value is an ascending number.
-         */
-         function processIndex(arr, item) {
-
-            if (!item.startAt) {
-                item.startAt = 0
-            } else if (typeof(item.startAt) == "string") {
-
-                // Set makeString to true so it can be converted back after doing indexing.
-                // Also count number of leading zeroes so they can be added back. 
-                item.makeString = true;
-                item.leadingZeroes = getLeadingZeroes(item.startAt);
-                item.startAt = parseFloat(item.startAt);
-
-            }
-
-            if (item.leadingZeroes) {
-                // Total length allows for adding leading zeroes while taking into account 099 -> 100 situations
-                item.totalLength = item.startAt.toString().length + item.leadingZeroes
-            }
-
-            arr.forEach(function(record) {
-
-                var amount = item.startAt;
-
-                if (item.makeString) {
-
-                    amount = amount.toString();
-
-                    if (item.leadingZeroes) {
-                        amount = amount.padStart(item.totalLength, "0");
-                    }
-
-                }
-
-                record[item.keyName] = amount;
-                item.startAt++;
-
-            });
-
-            function getLeadingZeroes(str) {
-
-                var i;
-                for (i = 0; i < str.length; i ++) {
-                    if (str[i] !== '0') {
-                        break;
-                    }
-                }
-                return i;
-
-            }
-
-            return arr;
-        }
-
-        /**
-         * Populate arr objects with key and value. Value is chosen from an array. Array of values is
-         * a preset one or a custom array given by the user.
-         */
-        function processSample(arr, item) {
-
-            if (!item.startAt) {
-                item.startAt = 0;
-            }
-
-            var sampleArr = getSample(item);
-
-            if (sampleArr) {
-
-                arr.forEach(function(record) {
-
-                    record[item.keyName] = sampleArr[item.startAt];
-                    item.startAt++;
-                    if (item.startAt >= sampleArr.length) {
-                        item.startAt = 0;
-                    }
-
-                });
-
-            }
-
-            return arr;
-
-        }
-
-        /**
-         * Get sample array for the sample json type
-         */
-        function getSample(item) {
-            
-            var sampleArr = [];
-            // Determine sample array to run through
-            switch (item.type) {
-
-                case "sample custom":
-                    if (!item.custom || !Array.isArray(item.custom)) {
-
-                        console.warn("keyName " + item.keyName + ": type 'sample custom' needs a custom key with a value that's an array of samples.");
-                        return;
-
-                    } else {
-
-                        sampleArr = item.custom;
-                        return sampleArr;
-
-                    }
-                case "sample countries":
-
-                    pre_countries.forEach(function(item) {
-                        sampleArr.push(item.nameEnglish);
-                    });
-                    return sampleArr;
-
-                case "sample firstNames":
-
-                    sampleArr = pre_firstNames;
-                    return sampleArr;
-
-                case "sample lastNames":
-
-                    sampleArr = pre_lastNames;
-                    return sampleArr;
-
-                case "sample firstLastNames":
-
-                    pre_firstNames.forEach(function(firstName, ind){
-                        sampleArr.push(firstName + " " + pre_lastNames[ind]);
-                    });
-                    return sampleArr;
-
-                case "sample weightsPlural":
-
-                    sampleArr = pre_uomWeightsPlural;                   
-                    return sampleArr;
-
-                default:
-                    console.warn("keyName " + item.keyName + ": sample type " + item.type + " not known.");
-                    return;
-
-            }
-
-        }
-
-        /**
-         * Event handler modifies json file by incrementing a field, starting at given value and going
-         * up by 1 for each item.
-        */
-        function processJSON() {
-
-            var form = document.getElementById("formModifyJSON");
-            var fieldToIncrement = form.elements["fieldToIncrement"].value;
-            var startingValue = form.elements["startingValue"].value;
-            var isNewField = form.elements["newField"].checked;
-
-            var taJSONIn = document.getElementById("taJSONIn");
-            var taJSONOut = document.getElementById("taJSONOut");
-
-            var jsonIn = JSON.parse(taJSONIn.value);
-
-            var newJSON = incrementField(jsonIn, fieldToIncrement, startingValue, isNewField);
-
-            taJSONOut.value = JSON.stringify(newJSON, null, 4);
-            return false;
-        }
-
-        /** 
-         * Perform field increment operation
-         */
-        function incrementField(jsonArray, field, value, isNewField) {
-
-            jsonArray.forEach(function (item) {
-
-                if (item[field] || isNewField) {
-                    item[field] = typeof field === "string" ? value.toString() : value;
-                    value++;
-                }
-
-            });
-
-            return (jsonArray);
-
-        }
 
     </script>
 
